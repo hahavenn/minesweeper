@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Minesweeper!</title>
+
+        <style type="text/css">
+            @font-face {
+                font-family: "Play-Regular";
+                src: url(Play-Regular.ttf);
+                font-style: normal;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                overflow: visible;
+                font-family: "Play-Regular";
+
+                --color-one: #ebf200;
+                --color-two: #63ffb3;
+                --color-three: #00a519;
+                --color-four: #ff14bd;
+                --color-five: #7baff7;
+                --color-six: #0800ff;
+                --color-seven: #b169f8;
+                --color-eight: #ff1313;
+
+                --color-mine: #ffa700;
+
+                --color-fieldShadow: #04d0ff;
+
+                --color-flag: #ffffff;
+            }
+
+            body {
+                width: min-content;
+                height: 100%;
+                min-height: 100vh;
+                position: relative;
+                margin: auto;
+                background: #000;
+            }
+
+            .minesweeperField {
+                width: auto;
+                display: grid;
+                border: 1px solid var(--color-fieldShadow);
+                border-radius: 6px;
+                box-shadow: 0 0 6px var(--color-fieldShadow);
+            }
+
+            .cell {
+                padding: 2px;
+                width: 40px;
+                height: 40px;
+                position: relative;
+                border: 1px solid var(--color-fieldShadow);
+            }
+
+            .hide-block {
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                background: rgb(19, 47, 47);
+                width: 34px;
+                height: 34px;
+            }
+
+            .hide-block:hover {
+                cursor: pointer;
+                background: var(--color-fieldShadow);
+                box-shadow: 0 0 8px var(--color-fieldShadow);
+            }
+
+            .fieldParametrs {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                min-width: 930px;
+                position: fixed;
+                left: calc(50% - 465px);
+                z-index: 1;
+            }
+
+            .fieldParametrs input,
+            .fieldParametrs button {
+                outline: none;
+                width: 200px;
+                height: 40px;
+                font-size: 20px;
+                border-radius: 6px;
+                color: var(--color-fieldShadow);
+                background: #000;
+                border: 2px var(--color-fieldShadow) solid;
+                box-shadow: 0 0 6px var(--color-fieldShadow), inset 0 0 6px var(--color-fieldShadow);
+            }
+
+            .fieldParametrs input {
+                padding-left: 7px;
+            }
+
+            .fieldParametrs button {
+                cursor: pointer;
+            }
+
+            .fieldParametrs * {
+                margin: 20px 10px 0;
+                border-radius: 3px;
+            }
+
+            .fieldCenter {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                padding: 150px 20px 20px;
+                position: relative;
+            }
+
+            .cell img {
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                width: 32px;
+                height: 32px;
+            }
+
+            .displayNone {
+                display: none;
+            }
+
+            .borderLeft {
+                border-left: 2px solid var(--color-fieldShadow);
+            }
+
+            .borderTop {
+                border-top: 2px solid var(--color-fieldShadow);
+            }
+
+            img.flag,
+            img.mine {
+                display: none;
+            }
+
+            div.flag > img.flag {
+                display: block;
+            }
+
+            div.mine > img.mine {
+                display: block;
+                width: 24px;
+                height: 24px;
+                top: 7px;
+                left: 7px;
+                box-shadow: 0 0 9px #f00;
+                border-radius: 50%;
+            }
+
+            .flag > .hide-block {
+                display: none;
+            }
+
+            .open > .hide-block {
+                display: none;
+            }
+
+            .switcher {
+                width: 160px;
+                height: 60px;
+                border: 2px var(--color-fieldShadow) solid;
+                box-shadow: 0 0 6px var(--color-fieldShadow), inset 0 0 6px var(--color-fieldShadow);
+                position: fixed;
+                top: 75px;
+                left: calc(50% + 30px);
+                background-color: #000;
+                border-radius: 30px;
+            }
+
+            .switcherToMine,
+            .switcherToFlag {
+                height: 60px;
+                border-radius: 30px;
+                width: 60px;
+                position: absolute;
+                cursor: pointer;
+            }
+
+            .switcher div img {
+                width: 34px;
+                height: 34px;
+                position: absolute;
+                border-radius: 17px;
+            }
+
+            .switcher div:nth-child(2) {
+                top: -2px;
+                right: -2px;
+            }
+
+            .switcher div:nth-child(2) img {
+                top: 13px;
+                left: 13px;
+            }
+
+            .switcher div:nth-child(1) {
+                top: -2px;
+                left: -2px;
+            }
+
+            .switcher div:nth-child(1) img {
+                width: 26px;
+                height: 26px;
+                top: 17px;
+                left: 17px;
+            }
+
+            .circle {
+                border-radius: 30px;
+                border: 2px var(--color-fieldShadow) solid;
+                width: 50px;
+                height: 50px;
+                cursor: pointer;
+                transition: all 0.1s linear;
+                margin: 3px 3px;
+            }
+
+            .eight,
+            .seven,
+            .six,
+            .five,
+            .four,
+            .three,
+            .two,
+            .one {
+                font-size: 22px;
+                font-weight: 700;
+                text-align: center;
+                line-height: 32px;
+            }
+
+            .eight {
+                color: var(--color-eight);
+                text-shadow: 0 0 16px var(--color-eight), 0 0 16px var(--color-eight);
+            }
+
+            .seven {
+                color: var(--color-seven);
+                text-shadow: 0 0 16px var(--color-seven), 0 0 16px var(--color-seven);
+            }
+
+            .six {
+                color: var(--color-six);
+                text-shadow: 0 0 16px var(--color-six), 0 0 16px var(--color-six);
+            }
+
+            .five {
+                color: var(--color-five);
+                text-shadow: 0 0 16px var(--color-five), 0 0 16px var(--color-five);
+            }
+
+            .four {
+                color: var(--color-four);
+                text-shadow: 0 0 16px var(--color-four), 0 0 16px var(--color-four);
+            }
+
+            .three {
+                color: var(--color-three);
+                text-shadow: 0 0 16px var(--color-three), 0 0 16px var(--color-three);
+            }
+
+            .two {
+                color: var(--color-two);
+                text-shadow: 0 0 16px var(--color-two), 0 0 16px var(--color-two);
+            }
+
+            .one {
+                color: var(--color-one);
+                text-shadow: 0 0 16px var(--color-one), 0 0 16px var(--color-one);
+            }
+
+            .mineShow {
+                text-align: center;
+                position: fixed;
+                top: 80px;
+                left: calc(50% - 210px);
+                font-size: 35px;
+                width: 200px;
+                z-index: 1;
+                box-shadow: 0 0 6px var(--color-fieldShadow), inset 0 0 6px var(--color-fieldShadow);
+                background-color: #000;
+                border: 2px var(--color-fieldShadow) solid;
+                border-radius: 6px;
+                height: 50px;
+                line-height: 44px;
+            }
+
+            .loser {
+                text-shadow: 0 0 16px #f00;
+                color: #f00;
+            }
+
+            .winner {
+                text-shadow: 0 0 16px var(--color-fieldShadow);
+                color: var(--color-fieldShadow);
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="cell displayNone">
+            <img src="mine.svg" class="mine" alt="" />
+            <img src="flag.png" class="flag" alt="" />
+            <div class="hide-block"></div>
+        </div>
+
+        <div class="fieldParametrs">
+            <input type="text" class="fieldWidth" placeholder="Ширина поля" />
+            <input type="text" class="fieldHeight" placeholder="Высота поля" />
+            <button class="createField">Создать поле</button>
+        </div>
+
+        <div class="mineShow"></div>
+
+        <div class="fieldCenter">
+            <div class="minesweeperField displayNone"></div>
+        </div>
+
+        <div class="switcher">
+            <div class="switcherToMine">
+                <img src="mine.svg" alt="" />
+            </div>
+            <div class="switcherToFlag">
+                <img src="flag.png" alt="" />
+            </div>
+            <div class="circle"></div>
+        </div>
+
+        <script>
+            "use strict";
+
+            let hide = document.createElement("div");
+            hide.classList.add("hide-block");
+
+            //получение полей ввода размеров поля для считывания
+            let inputFieldHeightInCell = document.getElementsByClassName("fieldHeight")[0];
+            let inputFieldWidthInCell = document.getElementsByClassName("fieldWidth")[0];
+
+            //кнопка создания поля
+            let btnCreateField = document.getElementsByClassName("createField")[0];
+
+            //высота и ширина поля
+            let fieldHeightInCell, fieldWidthInCell;
+
+            //поле, куда будут вставляться/удаляться клетки
+            let minesweeperField = document.getElementsByClassName("minesweeperField")[0];
+
+            //нулевая клетка, от которой будет копирование остальных
+            let cell = document.getElementsByClassName("cell")[0].cloneNode(true);
+
+            //массив клеток до генерации
+            let fieldCell = [];
+
+            //переменные для работы с индикатором положения
+            let switcherToMine = document.getElementsByClassName("switcherToMine")[0];
+            let switcherToFlag = document.getElementsByClassName("switcherToFlag")[0];
+            let circle = document.getElementsByClassName("circle")[0];
+            let switcherPos = false; //по умолчанию - мина
+
+            //индикатор генерации поля
+            let isFieldGenerated = false;
+
+            //количество мин, установленных при генерации
+            let mineGeneratedCount = 0;
+
+            //выбор положения - флаг
+            switcherToFlag.addEventListener("click", () => {
+                switcherPos = true;
+                circle.style.transform = "translateX(100px)";
+            });
+
+            //выбор положения - мина
+            switcherToMine.addEventListener("click", () => {
+                switcherPos = false;
+                circle.style.transform = "translateX(0px)";
+            });
+
+            //массив количество мин <-> css класс
+            let masDigits = new Map([
+                [8, "eight"],
+                [7, "seven"],
+                [6, "six"],
+                [5, "five"],
+                [4, "four"],
+                [3, "three"],
+                [2, "two"],
+                [1, "one"],
+            ]);
+
+            //закругление границы вокруг поля
+            function borderRadiusChange(fieldCell) {
+                fieldCell[0][0].style.borderTopLeftRadius = "4px";
+                fieldCell[0][fieldCell[0].length - 1].style.borderTopRightRadius = "4px";
+                fieldCell[fieldCell.length - 1][0].style.borderBottomLeftRadius = "4px";
+                fieldCell[fieldCell.length - 1][fieldCell[fieldCell.length - 1].length - 1].style.borderBottomRightRadius = "4px";
+            }
+
+            // //массив для работы с клетками вокруг
+            // let workArray = [
+            //     cellOne = ,
+            //     cellTwo = ,
+            //     cellThree = ,
+            //     cellFour = ,
+            //     cellFive = ,
+            //     cellSix = ,
+            //     cellSeven = ,
+            //     cellEight = ,
+            // ];
+
+            //расстановка чисел, на основе содержания мин вокруг клетки
+            function placeNumbers(fieldHeightInCell, fieldWidthInCell, a, b, fieldCell) {
+                let countMines = 0;
+                //левый верхний угол
+                if (a == 0 && b == 0) {
+                    if (fieldCell[a][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //вдоль вверха
+                if (a == 0 && b != 0 && b < fieldWidthInCell - 1) {
+                    if (fieldCell[a][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a][b + 1].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //правый верхний угол
+                if (a == 0 && b == fieldWidthInCell - 1) {
+                    if (fieldCell[a][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //правая стенка
+                if (a != 0 && b == fieldWidthInCell - 1 && a < fieldHeightInCell - 1) {
+                    if (fieldCell[a - 1][b].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //левая стенка
+                if (a != 0 && b == 0 && a < fieldHeightInCell - 1) {
+                    if (fieldCell[a - 1][b].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //левый нижний угол
+                if (a == fieldHeightInCell - 1 && b == 0) {
+                    if (fieldCell[a - 1][b].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a][b + 1].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //вдоль низа
+                if (a == fieldHeightInCell - 1 && b != 0 && b < fieldWidthInCell - 1) {
+                    if (fieldCell[a][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a][b + 1].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //правый нижний угол
+                if (a == fieldHeightInCell - 1 && b == fieldWidthInCell - 1) {
+                    if (fieldCell[a][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b].classList.contains("mine")) countMines++;
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+
+                //в центре поля
+                if (a != fieldHeightInCell - 1 && b != fieldWidthInCell - 1 && a != 0 && b != 0) {
+                    if (fieldCell[a - 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b].classList.contains("mine")) countMines++;
+                    if (fieldCell[a - 1][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a][b + 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b - 1].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b].classList.contains("mine")) countMines++;
+                    if (fieldCell[a + 1][b + 1].classList.contains("mine")) countMines++;
+
+                    if (countMines == 0) {
+                        fieldCell[a][b].classList.add("empty");
+                    } else {
+                        fieldCell[a][b].classList.add(masDigits.get(countMines));
+                        fieldCell[a][b].classList.add("digit");
+                        fieldCell[a][b].appendChild(document.createElement("div")).innerHTML = countMines;
+                    }
+                }
+            }
+
+            //получение рандомного числа
+            function getRandomInt(max) {
+                return Math.floor(Math.random() * max);
+            }
+
+            //проверка, что мина не была установлена
+            function mineNotPlaced(a, b, fieldCell) {
+                if (!fieldCell[a][b].classList.contains("mine")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            //открытие пустых клеток
+            function openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b, fieldCell) {
+                if (!fieldCell[a][b].classList.contains("open") && !fieldCell[a][b].classList.contains("flag")) {
+                    fieldCell[a][b].classList.add("open");
+
+                    //левый верхний угол
+                    if (a == 0 && b == 0) {
+                        if (fieldCell[a][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b + 1, fieldCell);
+                        if (fieldCell[a + 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b + 1, fieldCell);
+                        if (fieldCell[a + 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b, fieldCell);
+
+                        if (!fieldCell[a][b + 1].classList.contains("flag") && !fieldCell[a][b + 1].classList.contains("open")) {
+                            fieldCell[a][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b].classList.contains("flag") && !fieldCell[a + 1][b].classList.contains("open")) {
+                            fieldCell[a + 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b + 1].classList.contains("flag") && !fieldCell[a + 1][b + 1].classList.contains("open")) {
+                            fieldCell[a + 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //вдоль вверха
+                    if (a == 0 && b != 0 && b < fieldWidthInCell - 1) {
+                        if (fieldCell[a][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b - 1, fieldCell);
+                        if (fieldCell[a + 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b - 1, fieldCell);
+                        if (fieldCell[a + 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b, fieldCell);
+                        if (fieldCell[a + 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b + 1, fieldCell);
+                        if (fieldCell[a][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b + 1, fieldCell);
+
+                        if (!fieldCell[a][b - 1].classList.contains("flag") && !fieldCell[a][b - 1].classList.contains("open")) {
+                            fieldCell[a][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b + 1].classList.contains("flag") && !fieldCell[a][b + 1].classList.contains("open")) {
+                            fieldCell[a][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b - 1].classList.contains("flag") && !fieldCell[a + 1][b - 1].classList.contains("open")) {
+                            fieldCell[a + 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b].classList.contains("flag") && !fieldCell[a + 1][b].classList.contains("open")) {
+                            fieldCell[a + 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b + 1].classList.contains("flag") && !fieldCell[a + 1][b + 1].classList.contains("open")) {
+                            fieldCell[a + 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //правый верхний угол
+                    if (a == 0 && b == fieldWidthInCell - 1) {
+                        if (fieldCell[a][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b - 1, fieldCell);
+                        if (fieldCell[a + 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b - 1, fieldCell);
+                        if (fieldCell[a + 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b, fieldCell);
+
+                        if (!fieldCell[a][b - 1].classList.contains("flag") && !fieldCell[a][b - 1].classList.contains("open")) {
+                            fieldCell[a][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b - 1].classList.contains("flag") && !fieldCell[a + 1][b - 1].classList.contains("open")) {
+                            fieldCell[a + 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b].classList.contains("flag") && !fieldCell[a + 1][b].classList.contains("open")) {
+                            fieldCell[a + 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //правая стенка
+                    if (a != 0 && b == fieldWidthInCell - 1 && a < fieldHeightInCell - 1) {
+                        if (fieldCell[a - 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b, fieldCell);
+                        if (fieldCell[a - 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b - 1, fieldCell);
+                        if (fieldCell[a][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b - 1, fieldCell);
+                        if (fieldCell[a + 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b - 1, fieldCell);
+                        if (fieldCell[a + 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b, fieldCell);
+
+                        if (!fieldCell[a - 1][b - 1].classList.contains("flag") && !fieldCell[a - 1][b - 1].classList.contains("open")) {
+                            fieldCell[a - 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b].classList.contains("flag") && !fieldCell[a - 1][b].classList.contains("open")) {
+                            fieldCell[a - 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b - 1].classList.contains("flag") && !fieldCell[a][b - 1].classList.contains("open")) {
+                            fieldCell[a][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b - 1].classList.contains("flag") && !fieldCell[a + 1][b - 1].classList.contains("open")) {
+                            fieldCell[a + 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b].classList.contains("flag") && !fieldCell[a + 1][b].classList.contains("open")) {
+                            fieldCell[a + 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //левая стенка
+                    if (a != 0 && b == 0 && a < fieldHeightInCell - 1) {
+                        if (fieldCell[a - 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b, fieldCell);
+                        if (fieldCell[a - 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b + 1, fieldCell);
+                        if (fieldCell[a][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b + 1, fieldCell);
+                        if (fieldCell[a + 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b + 1, fieldCell);
+                        if (fieldCell[a + 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b, fieldCell);
+
+                        if (!fieldCell[a - 1][b].classList.contains("flag") && !fieldCell[a - 1][b].classList.contains("open")) {
+                            fieldCell[a - 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b + 1].classList.contains("flag") && !fieldCell[a - 1][b + 1].classList.contains("open")) {
+                            fieldCell[a - 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b + 1].classList.contains("flag") && !fieldCell[a][b + 1].classList.contains("open")) {
+                            fieldCell[a][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b].classList.contains("flag") && !fieldCell[a + 1][b].classList.contains("open")) {
+                            fieldCell[a + 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b + 1].classList.contains("flag") && !fieldCell[a + 1][b + 1].classList.contains("open")) {
+                            fieldCell[a + 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //левый нижний угол
+                    if (a == fieldHeightInCell - 1 && b == 0) {
+                        if (fieldCell[a - 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b, fieldCell);
+                        if (fieldCell[a - 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b + 1, fieldCell);
+                        if (fieldCell[a][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b + 1, fieldCell);
+
+                        if (!fieldCell[a - 1][b].classList.contains("flag") && !fieldCell[a - 1][b].classList.contains("open")) {
+                            fieldCell[a - 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b + 1].classList.contains("flag") && !fieldCell[a - 1][b + 1].classList.contains("open")) {
+                            fieldCell[a - 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b + 1].classList.contains("flag") && !fieldCell[a][b + 1].classList.contains("open")) {
+                            fieldCell[a][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //вдоль низа
+                    if (a == fieldHeightInCell - 1 && b != 0 && b < fieldWidthInCell - 1) {
+                        if (fieldCell[a][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b - 1, fieldCell);
+                        if (fieldCell[a - 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b - 1, fieldCell);
+                        if (fieldCell[a - 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b, fieldCell);
+                        if (fieldCell[a - 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b + 1, fieldCell);
+                        if (fieldCell[a][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b + 1, fieldCell);
+
+                        if (!fieldCell[a - 1][b - 1].classList.contains("flag") && !fieldCell[a - 1][b - 1].classList.contains("open")) {
+                            fieldCell[a - 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b].classList.contains("flag") && !fieldCell[a - 1][b].classList.contains("open")) {
+                            fieldCell[a - 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b + 1].classList.contains("flag") && !fieldCell[a - 1][b + 1].classList.contains("open")) {
+                            fieldCell[a - 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b - 1].classList.contains("flag") && !fieldCell[a][b - 1].classList.contains("open")) {
+                            fieldCell[a][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b + 1].classList.contains("flag") && !fieldCell[a][b + 1].classList.contains("open")) {
+                            fieldCell[a][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //правый нижний угол
+                    if (a == fieldHeightInCell - 1 && b == fieldWidthInCell - 1) {
+                        if (fieldCell[a][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b - 1, fieldCell);
+                        if (fieldCell[a - 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b - 1, fieldCell);
+                        if (fieldCell[a - 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b, fieldCell);
+
+                        if (!fieldCell[a - 1][b - 1].classList.contains("flag") && !fieldCell[a - 1][b - 1].classList.contains("open")) {
+                            fieldCell[a - 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b].classList.contains("flag") && !fieldCell[a - 1][b].classList.contains("open")) {
+                            fieldCell[a - 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b - 1].classList.contains("flag") && !fieldCell[a][b - 1].classList.contains("open")) {
+                            fieldCell[a][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    //в центре поля
+                    if (a != fieldHeightInCell - 1 && b != fieldWidthInCell - 1 && a != 0 && b != 0) {
+                        if (fieldCell[a - 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b - 1, fieldCell);
+                        if (fieldCell[a - 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b, fieldCell);
+                        if (fieldCell[a - 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a - 1, b + 1, fieldCell);
+                        if (fieldCell[a][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b - 1, fieldCell);
+                        if (fieldCell[a][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b + 1, fieldCell);
+                        if (fieldCell[a + 1][b - 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b - 1, fieldCell);
+                        if (fieldCell[a + 1][b].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b, fieldCell);
+                        if (fieldCell[a + 1][b + 1].classList.contains("empty")) openEmptyNear(fieldHeightInCell, fieldWidthInCell, a + 1, b + 1, fieldCell);
+
+                        if (!fieldCell[a - 1][b - 1].classList.contains("flag") && !fieldCell[a - 1][b - 1].classList.contains("open")) {
+                            fieldCell[a - 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b].classList.contains("flag") && !fieldCell[a - 1][b].classList.contains("open")) {
+                            fieldCell[a - 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a - 1][b + 1].classList.contains("flag") && !fieldCell[a - 1][b + 1].classList.contains("open")) {
+                            fieldCell[a - 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b - 1].classList.contains("flag") && !fieldCell[a][b - 1].classList.contains("open")) {
+                            fieldCell[a][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a][b + 1].classList.contains("flag") && !fieldCell[a][b + 1].classList.contains("open")) {
+                            fieldCell[a][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b - 1].classList.contains("flag") && !fieldCell[a + 1][b - 1].classList.contains("open")) {
+                            fieldCell[a + 1][b - 1].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b].classList.contains("flag") && !fieldCell[a + 1][b].classList.contains("open")) {
+                            fieldCell[a + 1][b].classList.add("open");
+                            closedCells--;
+                        }
+                        if (!fieldCell[a + 1][b + 1].classList.contains("flag") && !fieldCell[a + 1][b + 1].classList.contains("open")) {
+                            fieldCell[a + 1][b + 1].classList.add("open");
+                            closedCells--;
+                        }
+                    }
+
+                    closedCells--;
+                }
+            }
+
+            //блок с количеством мин - для пользователя
+            let mineShow = document.getElementsByClassName("mineShow")[0];
+
+            //количество мин - для пользователя
+            let mineCount = 0;
+
+            //изменение количества мин (визуально)
+            function renderMineCount() {
+                mineShow.innerHTML = "";
+                mineShow.innerHTML = mineCount;
+            }
+
+            //число неправильных флагов
+            let wrongFlags = 0;
+
+            //число неоткрытых клеток
+            let closedCells = 0;
+
+            //количество мин поставленных до генерации
+            let prevCount;
+
+            //индикатор окончания игры
+            let gameover = false;
+
+            //генерирование мин на поле
+            function generateField(fieldHeightInCell, fieldWidthInCell, a, b, fieldCell) {
+                //получение количества мин в поле заданного размера на основе плотности распределения
+                prevCount = mineCount;
+                mineCount = Math.round((fieldHeightInCell * fieldWidthInCell) / 5) + prevCount;
+                mineShow.innerHTML = mineCount;
+
+                //постановка мин
+                while (mineGeneratedCount != mineCount) {
+                    let i = getRandomInt(fieldHeightInCell);
+                    let j = getRandomInt(fieldWidthInCell);
+
+                    if (mineNotPlaced(i, j, fieldCell) && (i != a || j != b)) {
+                        fieldCell[i][j].classList.add("mine");
+                        mineGeneratedCount++;
+                    }
+                }
+
+                //постановка чисел на основе близлежащих мин
+                for (let i = 0; i < fieldHeightInCell; i++) {
+                    for (let j = 0; j < fieldWidthInCell; j++) {
+                        if (!fieldCell[i][j].classList.contains("mine")) placeNumbers(fieldHeightInCell, fieldWidthInCell, i, j, fieldCell);
+                        fieldCell[i][j].appendChild(hide);
+                    }
+                }
+
+                //обнуляем для следующей генерации
+                mineGeneratedCount = 0;
+
+                //переключение индикатора создания поля
+                isFieldGenerated = true;
+            }
+
+            //событие нажатия кнопки "создать поле"
+            btnCreateField.addEventListener("click", function (event) {
+                event.preventDefault();
+
+                if (inputFieldHeightInCell.value >= 2 && inputFieldWidthInCell.value >= 2) {
+                    while (minesweeperField.firstChild) {
+                        minesweeperField.removeChild(minesweeperField.firstChild);
+                    }
+
+                    //получение высоты и ширины поля из input
+                    fieldHeightInCell = inputFieldHeightInCell.value;
+                    fieldWidthInCell = inputFieldWidthInCell.value;
+
+                    //показать, сколько клеток закрыто изначально
+                    closedCells = fieldHeightInCell * fieldWidthInCell;
+
+                    prevCount = 0;
+                    mineCount = 0;
+                    mineShow.innerHTML = mineCount;
+
+                    mineShow.classList.add("loser");
+                    mineShow.classList.remove("winner");
+
+                    //проверка наличия размеров поля в input
+                    if (fieldHeightInCell != "" && fieldWidthInCell != "") {
+                        //создаем массив наших клеток
+                        fieldCell = [];
+
+                        //устанавливаем, что поле не было сгенерировано
+                        isFieldGenerated = false;
+
+                        //делаем видимым наше минное поле
+                        minesweeperField.classList.remove("displayNone");
+
+                        //построение сетки поля заданного размера
+                        minesweeperField.style.gridTemplateRows = "repeat(" + fieldHeightInCell + ", 40px)";
+                        minesweeperField.style.gridTemplateColumns = "repeat(" + fieldWidthInCell + ", 40px)";
+
+                        //заполняем массив наших клеток
+                        for (let i = 0; i < fieldHeightInCell; i++) {
+                            fieldCell[i] = [];
+                            for (let j = 0; j < fieldWidthInCell; j++) {
+                                fieldCell[i][j] = "";
+                            }
+                        }
+
+                        //делаем наши клетки видимыми
+                        cell.classList.remove("displayNone");
+
+                        //начинаем процесс расстановки клеток со стилями и событиями нажатия на клетки
+                        for (let i = 0; i < fieldHeightInCell; i++) {
+                            for (let j = 0; j < fieldWidthInCell; j++) {
+                                //вставляем нашу клетку в массив клеток
+                                fieldCell[i][j] = minesweeperField.appendChild(cell);
+
+                                //устанавливаем клон клетки как копию последнего вставленного значения
+                                cell = fieldCell[i][j].cloneNode(true);
+
+                                //установка события нажатия на клетку
+                                fieldCell[i][j].addEventListener("click", function (event) {
+                                    //делаем копии индексов для работы с ними
+                                    let a = i;
+                                    let b = j;
+
+                                    let eventHappend = false;
+
+                                    //поле не сгенерировано
+                                    if (!isFieldGenerated) {
+                                        //выбран флаг
+                                        // if (!eventHappend && switcherPos) {
+                                        //     //если есть флаг - удаляет его
+                                        //     if (!eventHappend && fieldCell[i][j].classList.contains("flag")) {
+                                        //         fieldCell[i][j].classList.remove("flag");
+                                        //         eventHappend = true;
+                                        //         mineCount++;
+                                        //         renderMineCount();
+                                        //         if (!fieldCell[i][j].classList.contains("mine")) {
+                                        //             wrongFlags--;
+                                        //         }
+                                        //         closedCells++;
+                                        //     }
+
+                                        //     //если флага нет - ставит его
+                                        //     if (!eventHappend && !fieldCell[i][j].classList.contains("flag") && !fieldCell[i][j].classList.contains("open")) {
+                                        //         fieldCell[i][j].classList.add("flag");
+                                        //         eventHappend = true;
+                                        //         mineCount--;
+                                        //         renderMineCount();
+                                        //         if (!fieldCell[i][j].classList.contains("mine")) {
+                                        //             wrongFlags++;
+                                        //         }
+                                        //         closedCells--;
+                                        //     }
+                                        // }
+
+                                        //выбрана мина
+                                        if (!eventHappend && !switcherPos) {
+                                            //нет флага -> генерация поля
+                                            if (!eventHappend && !fieldCell[i][j].classList.contains("flag")) {
+                                                generateField(fieldHeightInCell, fieldWidthInCell, a, b, fieldCell);
+                                            }
+
+                                            //если есть флаг - ничего не делает
+                                            if (!eventHappend && fieldCell[i][j].classList.contains("flag")) {
+                                                eventHappend = true;
+                                            }
+
+                                            //если флага нет и клетка пустая
+                                            if (!eventHappend && !fieldCell[i][j].classList.contains("flag") && fieldCell[i][j].classList.contains("empty")) {
+                                                openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b, fieldCell);
+                                                eventHappend = true;
+                                            }
+
+                                            //если флага нет и клетка число
+                                            if (!eventHappend && !fieldCell[i][j].classList.contains("flag") && fieldCell[i][j].classList.contains("digit")) {
+                                                fieldCell[i][j].classList.add("open");
+                                                closedCells--;
+                                                eventHappend = true;
+                                            }
+                                        }
+                                    }
+                                    //поле сгенерировано
+                                    else {
+                                        if (!gameover) {
+                                            //выбран флаг
+                                            if (!eventHappend && switcherPos) {
+                                                //если есть флаг - удаляет его
+                                                if (!eventHappend && fieldCell[i][j].classList.contains("flag") && !fieldCell[i][j].classList.contains("open")) {
+                                                    fieldCell[i][j].classList.remove("flag");
+                                                    eventHappend = true;
+                                                    mineCount++;
+                                                    renderMineCount();
+                                                    if (!fieldCell[i][j].classList.contains("mine")) {
+                                                        wrongFlags--;
+                                                    }
+                                                    closedCells++;
+                                                }
+
+                                                //если флага нет - ставит его
+                                                if (!eventHappend && !fieldCell[i][j].classList.contains("flag") && !fieldCell[i][j].classList.contains("open")) {
+                                                    fieldCell[i][j].classList.add("flag");
+                                                    eventHappend = true;
+                                                    mineCount--;
+                                                    renderMineCount();
+                                                    if (!fieldCell[i][j].classList.contains("mine")) {
+                                                        wrongFlags++;
+                                                    }
+                                                    closedCells--;
+                                                }
+                                            }
+
+                                            //выбрана мина
+                                            if (!eventHappend && !switcherPos) {
+                                                //если клетка уже открыта
+                                                if (fieldCell[i][j].classList.contains("open")) {
+                                                    eventHappend = true;
+                                                }
+
+                                                //если есть флаг - ничего не делает
+                                                if (!eventHappend && fieldCell[i][j].classList.contains("flag")) {
+                                                    eventHappend = true;
+                                                    closedCells--;
+                                                }
+
+                                                //если флага нет и клетка пустая
+                                                if (!eventHappend && !fieldCell[i][j].classList.contains("flag") && fieldCell[i][j].classList.contains("empty")) {
+                                                    openEmptyNear(fieldHeightInCell, fieldWidthInCell, a, b, fieldCell);
+                                                    eventHappend = true;
+                                                }
+
+                                                //если флага нет и клетка число
+                                                if (!eventHappend && !fieldCell[i][j].classList.contains("flag") && fieldCell[i][j].classList.contains("digit")) {
+                                                    fieldCell[i][j].classList.add("open");
+                                                    eventHappend = true;
+                                                    closedCells--;
+                                                }
+
+                                                //если есть мина -> проигрыш
+                                                if (!eventHappend && fieldCell[i][j].classList.contains("mine")) {
+                                                    //закончить игру
+                                                    fieldCell[i][j].classList.add("open");
+                                                    mineShow.innerHTML = "";
+                                                    mineShow.innerHTML = "YOU LOSE!";
+                                                    gameover = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (wrongFlags == 0 && closedCells == 0) {
+                                        mineShow.innerHTML = "";
+                                        mineShow.classList.remove("loser");
+                                        mineShow.classList.add("winner");
+                                        mineShow.innerHTML = "YOU WON!";
+                                        gameover = true;
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    //изменяем радиус закругления поля после генерации
+                    borderRadiusChange(fieldCell);
+                }
+            });
+        </script>
+    </body>
+</html>
